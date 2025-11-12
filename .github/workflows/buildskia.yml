@@ -172,10 +172,9 @@ jobs:
           .\bin\gn gen out/Release
 
       - name: List available GN arguments
-        if: failure()
         run: |
           cd skia
-          .\bin\gn args --list out/Release
+          .\bin\gn args --list out/Release | Select-String "jpeg"
 
       - name: Build Skia
         run: |
