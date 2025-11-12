@@ -1,0 +1,104 @@
+name: Build Skia Multi-Platform
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            git \
+            python3 \
+            libfontconfig1-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev
+
+      - name: Clone Skia
+        run: |
+          git clone https://skia.googlesource.com/skia.git
+          cd skia
+          python3 tools/git-sync-deps
+
+      - name: Build Skia
+        run: |
+          cd skia
+          ./bin/gn gen out/Release --args='is_debug=false'
+          ninja -C out/Release
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: skia-linux
+          path: skia/out/Release/
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          brew install python3
+
+      - name: Clone Skia
+        run: |
+          git clone https://skia.googlesource.com/skia.git
+          cd skia
+          python3 tools/git-sync-deps
+
+      - name: Build Skia
+        run: |
+          cd skia
+          ./bin/gn gen out/Release --args='is_debug=false'
+          ninja -C out/Release
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: skia-macos
+          path: skia/out/Release/
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Clone Skia
+        run: |
+          git clone https://skia.googlesource.com/skia.git
+          cd skia
+          python tools/git-sync-deps
+
+      - name: Build Skia
+        run: |
+          cd skia
+          .\bin\gn gen out/Release --args='is_debug=false'
+          ninja -C out/Release
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: skia-windows
+          path: skia/out/Release/
