@@ -174,7 +174,7 @@ jobs:
       - name: List available GN arguments
         run: |
           cd skia
-          .\bin\gn args --list out/Release | Select-String "jpeg"
+          .\bin\gn args --list out/Release
 
       - name: Build Skia
         run: |
