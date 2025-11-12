@@ -1,4 +1,23 @@
-name: Build Skia Multi-Platform
+- name: Clean build directory
+        run: |
+          cd skia
+          if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
+
+      - name: Generate build configuration
+        run: |
+          cd skia
+          .\bin\gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false skia_use_system_zlib=false'
+
+      - name: List available GN arguments
+        if: failure()
+        run: |
+          cd skia
+          .\bin\gn args --list out/Release
+
+      - name: Build Skia
+        run: |
+          cd skia
+          ninja -C out/Releasename: Build Skia Multi-Platform
 
 on:
   push:
@@ -125,10 +144,6 @@ jobs:
           if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
 
       - name: Build Skia
-        run: |
-          cd skia
-          .\bin\gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false skia_use_system_zlib=false skia_use_libjpeg=false'
-          ninja -C out/Release
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
