@@ -67,8 +67,10 @@ jobs:
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
           skia_use_freetype = true
+          skia_use_system_freetype2 = false
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
+          skia_enable_fontmgr_custom_empty = true
           EOF
 
       - name: Build Skia
@@ -119,8 +121,10 @@ jobs:
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
           skia_use_freetype = true
+          skia_use_system_freetype2 = false
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
+          skia_enable_fontmgr_custom_empty = true
           EOF
 
       - name: Build Skia
@@ -177,8 +181,13 @@ jobs:
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
           skia_use_freetype = true
+          skia_use_system_freetype2 = false
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
+          skia_enable_fontmgr_custom_empty = true
+          skia_enable_fontmgr_win = false
+          skia_enable_fontmgr_fontconfig = false
+          extra_cflags = ["/MD"]
           skia_enable_tools = false
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
