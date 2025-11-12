@@ -1,141 +1,4 @@
-name: Build Skia Multi-Platform
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-    inputs:
-      build_linux:
-        description: 'Build for Linux'
-        required: false
-        default: 'true'
-        type: boolean
-      build_macos:
-        description: 'Build for macOS'
-        required: false
-        default: 'true'
-        type: boolean
-      build_windows:
-        description: 'Build for Windows'
-        required: false
-        default: 'true'
-        type: boolean
-
-jobs:
-  build-linux:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            git \
-            python3 \
-            libfontconfig1-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev
-
-      - name: Clone Skia
-        run: |
-          git clone https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python3 tools/git-sync-deps
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          mkdir -p out/Release
-          cat > out/Release/args.gn << 'EOF'
-          is_debug = false
-          is_official_build = true
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          EOF
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ./bin/gn gen out/Release
-          ninja -C out/Release
-
-      - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-linux
-          path: skia/out/Release/
-
-  build-macos:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install dependencies
-        run: |
-          brew install python3
-
-      - name: Clone Skia
-        run: |
-          git clone https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python3 tools/git-sync-deps
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          mkdir -p out/Release
-          cat > out/Release/args.gn << 'EOF'
-          is_debug = false
-          is_official_build = true
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          EOF
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ./bin/gn gen out/Release
-          ninja -C out/Release
-
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-macos
-          path: skia/out/Release/
-
-  build-windows:
+build-windows:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
     runs-on: windows-latest
     steps:
@@ -177,11 +40,18 @@ jobs:
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
           skia_use_freetype = true
+          skia_use_system_freetype2 = false
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
+          skia_enable_fontmgr_win = true
+          skia_enable_fontmgr_win_gdi = true
           skia_enable_tools = false
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
+
+      - name: Generate build files
+        run: |
+          cd skia
           .\bin\gn gen out/Release
 
       - name: List available GN arguments
@@ -198,7 +68,7 @@ jobs:
         if: failure()
         run: |
           cd skia
-          Get-Content build.log | Select-String "warning\|error" -Context 2
+          Get-Content build.log | Select-String "warning|error" -Context 2
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
