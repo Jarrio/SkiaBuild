@@ -1,50 +1,147 @@
+# Manual (on-demand) Skia build for Linux / macOS / Windows
 name: Build Skia (Linux / macOS / Windows)
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      os:
+        description: "Which OS to build (linux, macos, windows, all)"
+        required: true
+        default: "linux"
+      skia_ref:
+        description: "Skia ref to checkout (branch, tag, or commit). Use 'main' or a commit."
+        required: true
+        default: "main"
+      enable_gpu:
+        description: "Enable GPU in GN args (true/false)"
+        required: true
+        default: "false"
+      build_target:
+        description: "Ninja target to build (leave empty to build default/all)"
+        required: false
+        default: ""
+
+env:
+  SKIA_OUT: out/Release
 
 jobs:
-  build:
-    name: Build Skia on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    env:
-      SKIA_OUT: out/Release
+  build-linux:
+    if: ${{ github.event.inputs.os == 'all' || github.event.inputs.os == 'linux' }}
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (workflow config)
+      - name: Checkout workflow repo
         uses: actions/checkout@v4
 
-      - name: Setup Python 3
+      - name: Cache depot_tools
+        uses: actions/cache@v4
+        with:
+          path: skia-build/depot_tools
+          key: ${{ runner.os }}-depot-tools-v1
+
+      - name: Cache Skia checkout
+        uses: actions/cache@v4
+        with:
+          path: skia-build/skia
+          key: ${{ runner.os }}-skia-${{ github.event.inputs.skia_ref }}
+
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
-      - name: Give runners more time for lengthy builds (set shell options)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        run: |
-          set -o pipefail
-
-      - name: Run OS-specific build script (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Run Linux build script
         run: bash .github/skia-build-scripts/build-linux.sh
-
-      - name: Run OS-specific build script (macOS)
-        if: matrix.os == 'macos-latest'
-        run: bash .github/skia-build-scripts/build-macos.sh
-
-      - name: Run OS-specific build script (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: .github/skia-build-scripts/build-windows.ps1
+        env:
+          SKIA_REF: ${{ github.event.inputs.skia_ref }}
+          ENABLE_GPU: ${{ github.event.inputs.enable_gpu }}
+          BUILD_TARGET: ${{ github.event.inputs.build_target }}
 
       - name: Upload built libraries and headers
         uses: actions/upload-artifact@v4
         with:
-          name: skia-${{ matrix.os }}-libs
+          name: skia-linux-libs
           path: |
             out/Release/**
             skia/include/**
+          retention-days: 7
+
+  build-macos:
+    if: ${{ github.event.inputs.os == 'all' || github.event.inputs.os == 'macos' }}
+    runs-on: macos-latest
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v4
+
+      - name: Cache depot_tools
+        uses: actions/cache@v4
+        with:
+          path: skia-build/depot_tools
+          key: ${{ runner.os }}-depot-tools-v1
+
+      - name: Cache Skia checkout
+        uses: actions/cache@v4
+        with:
+          path: skia-build/skia
+          key: ${{ runner.os }}-skia-${{ github.event.inputs.skia_ref }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Run macOS build script
+        run: bash .github/skia-build-scripts/build-macos.sh
+        env:
+          SKIA_REF: ${{ github.event.inputs.skia_ref }}
+          ENABLE_GPU: ${{ github.event.inputs.enable_gpu }}
+          BUILD_TARGET: ${{ github.event.inputs.build_target }}
+
+      - name: Upload built libraries and headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: skia-macos-libs
+          path: |
+            out/Release/**
+            skia/include/**
+          retention-days: 7
+
+  build-windows:
+    if: ${{ github.event.inputs.os == 'all' || github.event.inputs.os == 'windows' }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v4
+
+      - name: Cache depot_tools
+        uses: actions/cache@v4
+        with:
+          path: skia-build/depot_tools
+          key: ${{ runner.os }}-depot-tools-v1
+
+      - name: Cache Skia checkout
+        uses: actions/cache@v4
+        with:
+          path: skia-build/skia
+          key: ${{ runner.os }}-skia-${{ github.event.inputs.skia_ref }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Run Windows build script
+        shell: pwsh
+        run: .github/skia-build-scripts/build-windows.ps1
+        env:
+          SKIA_REF: ${{ github.event.inputs.skia_ref }}
+          ENABLE_GPU: ${{ github.event.inputs.enable_gpu }}
+          BUILD_TARGET: ${{ github.event.inputs.build_target }}
+
+      - name: Upload built libraries and headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: skia-windows-libs
+          path: |
+            out/Release/**
+            skia/include/**
+          retention-days: 7
