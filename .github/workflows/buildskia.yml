@@ -119,6 +119,11 @@ jobs:
           cd skia
           python tools/git-sync-deps
 
+      - name: Clean build directory
+        run: |
+          cd skia
+          rm -r -fo out/Release
+
       - name: Build Skia
         run: |
           cd skia
