@@ -1,23 +1,4 @@
-- name: Clean build directory
-        run: |
-          cd skia
-          if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          .\bin\gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false skia_use_system_zlib=false'
-
-      - name: List available GN arguments
-        if: failure()
-        run: |
-          cd skia
-          .\bin\gn args --list out/Release
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ninja -C out/Releasename: Build Skia Multi-Platform
+name: Build Skia Multi-Platform
 
 on:
   push:
@@ -71,10 +52,25 @@ jobs:
           cd skia
           python3 tools/git-sync-deps
 
+      - name: Generate build configuration
+        run: |
+          cd skia
+          mkdir -p out/Release
+          cat > out/Release/args.gn << 'EOF'
+          is_debug = false
+          is_official_build = true
+          skia_use_system_freetype2 = false
+          skia_use_system_fontconfig = false
+          skia_use_system_libpng = false
+          skia_use_system_libjpeg = false
+          skia_use_system_libwebp = false
+          skia_use_system_zlib = false
+          EOF
+
       - name: Build Skia
         run: |
           cd skia
-          ./bin/gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false'
+          ./bin/gn gen out/Release
           ninja -C out/Release
 
       - name: Upload Linux artifacts
@@ -104,10 +100,25 @@ jobs:
           cd skia
           python3 tools/git-sync-deps
 
+      - name: Generate build configuration
+        run: |
+          cd skia
+          mkdir -p out/Release
+          cat > out/Release/args.gn << 'EOF'
+          is_debug = false
+          is_official_build = true
+          skia_use_system_freetype2 = false
+          skia_use_system_fontconfig = false
+          skia_use_system_libpng = false
+          skia_use_system_libjpeg = false
+          skia_use_system_libwebp = false
+          skia_use_system_zlib = false
+          EOF
+
       - name: Build Skia
         run: |
           cd skia
-          ./bin/gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false'
+          ./bin/gn gen out/Release
           ninja -C out/Release
 
       - name: Upload macOS artifacts
@@ -143,7 +154,33 @@ jobs:
           cd skia
           if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
 
+      - name: Generate build configuration
+        run: |
+          cd skia
+          New-Item -ItemType Directory -Path out/Release -Force | Out-Null
+          $args = @"
+          is_debug = false
+          is_official_build = true
+          skia_use_system_freetype2 = false
+          skia_use_system_fontconfig = false
+          skia_use_system_libpng = false
+          skia_use_system_libjpeg = false
+          skia_use_system_libwebp = false
+          skia_use_system_zlib = false
+          "@
+          $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
+          .\bin\gn gen out/Release
+
+      - name: List available GN arguments
+        if: failure()
+        run: |
+          cd skia
+          .\bin\gn args --list out/Release
+
       - name: Build Skia
+        run: |
+          cd skia
+          ninja -C out/Release
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
