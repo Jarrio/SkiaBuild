@@ -66,6 +66,10 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_enable_fontmgr_custom = true
+          skia_enable_fontmgr_empty = false
+          skia_use_freetype = true
+          skia_use_fontconfig = true
           EOF
 
       - name: Build Skia
@@ -115,6 +119,9 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_enable_fontmgr_custom = true
+          skia_enable_fontmgr_empty = false
+          skia_use_freetype = true
           EOF
 
       - name: Build Skia
@@ -170,14 +177,12 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_enable_fontmgr_custom = true
+          skia_enable_fontmgr_empty = false
+          skia_use_freetype = true
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
           .\bin\gn gen out/Release
-
-      - name: List available GN arguments
-        run: |
-          cd skia
-          .\bin\gn args --list out/Release
 
       - name: Build Skia
         run: |
