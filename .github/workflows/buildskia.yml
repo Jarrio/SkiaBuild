@@ -25,7 +25,7 @@ on:
 
 jobs:
   build-linux:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux == 'true' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
           path: skia/out/Release/
 
   build-macos:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos == 'true' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
           path: skia/out/Release/
 
   build-windows:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows == 'true' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
