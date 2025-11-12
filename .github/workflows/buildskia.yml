@@ -39,7 +39,7 @@ jobs:
           ninja -C out/Release
 
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: skia-linux
           path: skia/out/Release/
@@ -68,7 +68,7 @@ jobs:
           ninja -C out/Release
 
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: skia-macos
           path: skia/out/Release/
@@ -98,7 +98,7 @@ jobs:
           ninja -C out/Release
 
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: skia-windows
           path: skia/out/Release/
