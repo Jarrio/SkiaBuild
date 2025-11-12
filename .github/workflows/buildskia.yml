@@ -6,9 +6,26 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      build_linux:
+        description: 'Build for Linux'
+        required: false
+        default: 'true'
+        type: boolean
+      build_macos:
+        description: 'Build for macOS'
+        required: false
+        default: 'true'
+        type: boolean
+      build_windows:
+        description: 'Build for Windows'
+        required: false
+        default: 'true'
+        type: boolean
 
 jobs:
   build-linux:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +52,7 @@ jobs:
       - name: Build Skia
         run: |
           cd skia
-          ./bin/gn gen out/Release --args='is_debug=false'
+          ./bin/gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false'
           ninja -C out/Release
 
       - name: Upload Linux artifacts
@@ -45,6 +62,7 @@ jobs:
           path: skia/out/Release/
 
   build-macos:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos == 'true' }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +82,7 @@ jobs:
       - name: Build Skia
         run: |
           cd skia
-          ./bin/gn gen out/Release --args='is_debug=false'
+          ./bin/gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false'
           ninja -C out/Release
 
       - name: Upload macOS artifacts
@@ -74,6 +92,7 @@ jobs:
           path: skia/out/Release/
 
   build-windows:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows == 'true' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +113,7 @@ jobs:
       - name: Build Skia
         run: |
           cd skia
-          .\bin\gn gen out/Release --args='is_debug=false'
+          .\bin\gn gen out/Release --args='is_debug=false is_official_build=true skia_use_system_freetype2=false skia_use_system_fontconfig=false skia_use_system_libpng=false skia_use_system_libjpeg=false skia_use_system_libwebp=false'
           ninja -C out/Release
 
       - name: Upload Windows artifacts
