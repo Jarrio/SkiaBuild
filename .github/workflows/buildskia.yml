@@ -122,7 +122,7 @@ jobs:
       - name: Clean build directory
         run: |
           cd skia
-          rm -r -fo out/Release
+          if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
 
       - name: Build Skia
         run: |
