@@ -66,6 +66,7 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_use_freetype = true
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
           EOF
@@ -117,6 +118,7 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_use_freetype = true
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
           EOF
@@ -174,6 +176,7 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_use_freetype = true
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
           skia_enable_tools = false
