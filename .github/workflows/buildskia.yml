@@ -118,6 +118,7 @@ jobs:
           skia_use_system_libpng = false
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
+          skia_use_freetype = true
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
           EOF
@@ -133,8 +134,8 @@ jobs:
         with:
           name: skia-macos
           path: skia/out/Release/
-          
-build-windows:
+
+  build-windows:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
     runs-on: windows-latest
     steps:
@@ -176,18 +177,11 @@ build-windows:
           skia_use_system_libwebp = false
           skia_use_system_zlib = false
           skia_use_freetype = true
-          skia_use_system_freetype2 = false
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_win = true
-          skia_enable_fontmgr_win_gdi = true
           skia_enable_tools = false
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
-
-      - name: Generate build files
-        run: |
-          cd skia
           .\bin\gn gen out/Release
 
       - name: List available GN arguments
@@ -199,7 +193,7 @@ build-windows:
         run: |
           cd skia
           ninja -C out/Release 2>&1 | Tee-Object -FilePath build.log
-          
+
       - name: Check build log
         if: failure()
         run: |
