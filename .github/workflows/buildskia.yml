@@ -180,6 +180,8 @@ jobs:
           skia_enable_fontmgr_custom = true
           skia_enable_fontmgr_empty = false
           skia_use_freetype = false
+          skia_use_icu = false
+          extra_cflags = ["/GR-", "/wd4217"]
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
           .\bin\gn gen out/Release
