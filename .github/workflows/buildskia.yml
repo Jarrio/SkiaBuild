@@ -179,7 +179,7 @@ jobs:
           skia_use_system_zlib = false
           skia_enable_fontmgr_custom = true
           skia_enable_fontmgr_empty = false
-          skia_use_freetype = true
+          skia_use_freetype = false
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
           .\bin\gn gen out/Release
