@@ -71,6 +71,9 @@ jobs:
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
           skia_enable_fontmgr_custom_empty = true
+          skia_enable_fontmgr_win = false
+          skia_enable_fontmgr_fontconfig = false
+          skia_enable_tools = false
           EOF
 
       - name: Build Skia
@@ -125,6 +128,9 @@ jobs:
           skia_enable_fontmgr_custom_directory = true
           skia_enable_fontmgr_custom_embedded = true
           skia_enable_fontmgr_custom_empty = true
+          skia_enable_fontmgr_win = false
+          skia_enable_fontmgr_fontconfig = false
+          skia_enable_tools = false
           EOF
 
       - name: Build Skia
