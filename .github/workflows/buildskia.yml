@@ -187,7 +187,7 @@ jobs:
           skia_enable_fontmgr_custom_empty = true
           skia_enable_fontmgr_win = false
           skia_enable_fontmgr_fontconfig = false
-          extra_cflags = ["/MD"]
+          extra_cflags = ["/MT"]
           skia_enable_tools = false
           "@
           $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
