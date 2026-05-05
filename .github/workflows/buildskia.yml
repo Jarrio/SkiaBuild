@@ -8,12 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       build_linux:
-        description: 'Build for Linux x64'
-        required: false
-        default: 'true'
-        type: boolean
-      build_linux_arm64:
-        description: 'Build for Linux ARM64'
+        description: 'Build for Linux'
         required: false
         default: 'true'
         type: boolean
@@ -23,12 +18,7 @@ on:
         default: 'true'
         type: boolean
       build_windows:
-        description: 'Build for Windows x64'
-        required: false
-        default: 'true'
-        type: boolean
-      build_windows_arm64:
-        description: 'Build for Windows ARM64'
+        description: 'Build for Windows'
         required: false
         default: 'true'
         type: boolean
@@ -55,7 +45,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m143 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -95,72 +85,7 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: skia-linux-x64
-          path: skia/out/Release/
-
-  build-linux-arm64:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux_arm64 }}
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            git \
-            python3 \
-            libfontconfig1-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev
-
-      - name: Clone Skia
-        run: |
-          git clone https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python3 tools/git-sync-deps
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          mkdir -p out/Release
-          cat > out/Release/args.gn << 'EOF'
-          is_debug = false
-          is_official_build = true
-          target_cpu = "arm64"
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          skia_enable_tools = false
-          EOF
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ./bin/gn gen out/Release
-          ninja -C out/Release
-
-      - name: Upload Linux ARM64 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-linux-arm64
+          name: skia-linux
           path: skia/out/Release/
 
   build-macos:
@@ -177,7 +102,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m143 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -235,7 +160,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m143 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -288,95 +213,10 @@ jobs:
         if: failure()
         run: |
           cd skia
-          if (Test-Path build.log) {
-            Get-Content build.log | Select-String "warning|error" -Context 2
-          } else {
-            Write-Host "build.log not found — failure occurred before ninja ran."
-          }
+          Get-Content build.log | Select-String "warning|error" -Context 2
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: skia-windows-x64
-          path: skia/out/Release/
-
-  build-windows-arm64:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows_arm64 }}
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Clone Skia
-        run: |
-          git clone https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python tools/git-sync-deps
-
-      - name: Clean build directory
-        run: |
-          cd skia
-          if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          New-Item -ItemType Directory -Path out/Release -Force | Out-Null
-          $args = @"
-          is_debug = false
-          is_official_build = true
-          target_cpu = "arm64"
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          extra_cflags = ["/MT"]
-          skia_enable_tools = false
-          "@
-          $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
-          .\bin\gn gen out/Release
-
-      - name: List available GN arguments
-        run: |
-          cd skia
-          .\bin\gn args --list out/Release
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ninja -C out/Release 2>&1 | Tee-Object -FilePath build.log
-
-      - name: Check build log
-        if: failure()
-        run: |
-          cd skia
-          if (Test-Path build.log) {
-            Get-Content build.log | Select-String "warning|error" -Context 2
-          } else {
-            Write-Host "build.log not found — failure occurred before ninja ran."
-          }
-
-      - name: Upload Windows ARM64 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-windows-arm64
+          name: skia-windows
           path: skia/out/Release/
