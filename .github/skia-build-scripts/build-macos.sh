@@ -29,7 +29,7 @@ export PATH="$PWD/depot_tools:$PATH"
 
 echo "=== Cloning Skia (shallow) ==="
 if [ ! -d skia ]; then
-  git clone --depth=1 -b chrome/m143 https://skia.googlesource.com/skia.git
+  git clone --depth=1 -b chrome/m142 https://skia.googlesource.com/skia.git
 fi
 
 cd skia
