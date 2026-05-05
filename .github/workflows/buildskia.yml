@@ -288,7 +288,11 @@ jobs:
         if: failure()
         run: |
           cd skia
-          Get-Content build.log | Select-String "warning|error" -Context 2
+          if (Test-Path build.log) {
+            Get-Content build.log | Select-String "warning|error" -Context 2
+          } else {
+            Write-Host "build.log not found — failure occurred before ninja ran."
+          }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -298,7 +302,7 @@ jobs:
 
   build-windows-arm64:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows_arm64 }}
-    runs-on: windows-11-arm
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -365,7 +369,11 @@ jobs:
         if: failure()
         run: |
           cd skia
-          Get-Content build.log | Select-String "warning|error" -Context 2
+          if (Test-Path build.log) {
+            Get-Content build.log | Select-String "warning|error" -Context 2
+          } else {
+            Write-Host "build.log not found — failure occurred before ninja ran."
+          }
 
       - name: Upload Windows ARM64 artifacts
         uses: actions/upload-artifact@v4
