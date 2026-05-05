@@ -55,7 +55,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -119,7 +119,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -177,7 +177,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -235,7 +235,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
@@ -315,7 +315,7 @@ jobs:
 
       - name: Clone Skia
         run: |
-          git clone https://skia.googlesource.com/skia.git
+          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
 
       - name: Sync dependencies
         run: |
