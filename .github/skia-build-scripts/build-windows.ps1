@@ -20,7 +20,7 @@ if (-Not (Test-Path depot_tools)) {
 $env:PATH = (Join-Path $WorkDir "depot_tools") + ";" + $env:PATH
 
 if (-Not (Test-Path skia)) {
-  git clone --depth=1 -b chrome/m143 https://skia.googlesource.com/skia.git
+  git clone --depth=1 -b chrome/m142 https://skia.googlesource.com/skia.git
 }
 Set-Location (Join-Path $WorkDir "skia")
 
