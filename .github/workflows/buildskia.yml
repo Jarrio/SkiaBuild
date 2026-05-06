@@ -96,7 +96,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skia-linux-x64
-          path: skia/out/Release/
+          path: |
+            skia/out/Release/*.a
+            skia/out/Release/*.lib
+            skia/out/Release/icudtl.dat
 
   build-linux-arm64:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux_arm64 }}
@@ -161,7 +164,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skia-linux-arm64
-          path: skia/out/Release/
+          path: |
+            skia/out/Release/*.a
+            skia/out/Release/*.lib
+            skia/out/Release/icudtl.dat
 
   build-macos:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos }}
@@ -218,7 +224,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skia-macos
-          path: skia/out/Release/
+          path: |
+            skia/out/Release/*.a
+            skia/out/Release/*.lib
+            skia/out/Release/icudtl.dat
 
   build-windows:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
@@ -298,7 +307,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skia-windows-x64
-          path: skia/out/Release/
+          path: |
+            skia/out/Release/*.a
+            skia/out/Release/*.lib
+            skia/out/Release/icudtl.dat
 
   build-windows-arm64:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows_arm64 }}
@@ -379,4 +391,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skia-windows-arm64
-          path: skia/out/Release/
+          path: |
+            skia/out/Release/*.a
+            skia/out/Release/*.lib
+            skia/out/Release/icudtl.dat
