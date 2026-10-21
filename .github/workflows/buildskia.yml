@@ -7,391 +7,77 @@ on:
     branches: [ main ]
   workflow_dispatch:
     inputs:
-      build_linux:
-        description: 'Build for Linux x64'
+      targets:
+        description: 'Comma-separated target names from config/targets.json, or "all"'
         required: false
-        default: 'true'
-        type: boolean
-      build_linux_arm64:
-        description: 'Build for Linux ARM64'
-        required: false
-        default: 'true'
-        type: boolean
-      build_macos:
-        description: 'Build for macOS'
-        required: false
-        default: 'true'
-        type: boolean
-      build_windows:
-        description: 'Build for Windows x64'
-        required: false
-        default: 'true'
-        type: boolean
-      build_windows_arm64:
-        description: 'Build for Windows ARM64'
-        required: false
-        default: 'true'
-        type: boolean
+        default: 'all'
+        type: string
+
+env:
+  SKIA_BRANCH: chrome/m142
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  build-linux:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
+  plan:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install dependencies
+      - name: Select targets
+        id: select
+        env:
+          TARGETS: ${{ inputs.targets || 'all' }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            git \
-            python3 \
-            libfontconfig1-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev
+          matrix=$(jq -c --arg t "$TARGETS" '
+            if $t == "all" then .
+            else ($t | split(",") | map(gsub("^\\s+|\\s+$"; ""))) as $want
+              | map(select(.name as $n | $want | index($n)))
+            end' config/targets.json)
+          if [ "$matrix" = "[]" ]; then
+            echo "::error::No targets matched '$TARGETS'. Valid names: $(jq -r 'map(.name) | join(", ")' config/targets.json)"
+            exit 1
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
-      - name: Clone Skia
-        run: |
-          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python3 tools/git-sync-deps
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          mkdir -p out/Release
-          cat > out/Release/args.gn << 'EOF'
-          is_debug = false
-          is_official_build = true
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          skia_enable_tools = false
-          EOF
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ./bin/gn gen out/Release
-          ninja -C out/Release
-
-      - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-linux-x64
-          path: |
-            skia/out/Release/*.a
-            skia/out/Release/*.lib
-            skia/out/Release/icudtl.dat
-
-  build-linux-arm64:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux_arm64 }}
-    runs-on: ubuntu-24.04-arm
+  build:
+    needs: plan
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            git \
-            python3 \
-            libfontconfig1-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev
-
-      - name: Clone Skia
-        run: |
-          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python3 tools/git-sync-deps
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          mkdir -p out/Release
-          cat > out/Release/args.gn << 'EOF'
-          is_debug = false
-          is_official_build = true
-          target_cpu = "arm64"
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          skia_enable_tools = false
-          EOF
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ./bin/gn gen out/Release
-          ninja -C out/Release
-
-      - name: Upload Linux ARM64 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-linux-arm64
-          path: |
-            skia/out/Release/*.a
-            skia/out/Release/*.lib
-            skia/out/Release/icudtl.dat
-
-  build-macos:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install dependencies
-        run: |
-          brew install python3
-
-      - name: Clone Skia
-        run: |
-          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python3 tools/git-sync-deps
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          mkdir -p out/Release
-          cat > out/Release/args.gn << 'EOF'
-          is_debug = false
-          is_official_build = true
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          skia_enable_tools = false
-          EOF
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ./bin/gn gen out/Release
-          ninja -C out/Release
-
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-macos
-          path: |
-            skia/out/Release/*.a
-            skia/out/Release/*.lib
-            skia/out/Release/icudtl.dat
-
-  build-windows:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Clone Skia
+      - name: Install Linux dependencies
+        if: matrix.os == 'linux'
         run: |
-          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python tools/git-sync-deps
-
-      - name: Clean build directory
-        run: |
-          cd skia
-          if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          New-Item -ItemType Directory -Path out/Release -Force | Out-Null
-          $args = @"
-          is_debug = false
-          is_official_build = true
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          extra_cflags = ["/MT"]
-          skia_enable_tools = false
-          "@
-          $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
-          .\bin\gn gen out/Release
-
-      - name: List available GN arguments
-        run: |
-          cd skia
-          .\bin\gn args --list out/Release
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Build Skia
-        run: |
-          cd skia
-          ninja -C out/Release 2>&1 | Tee-Object -FilePath build.log
+        env:
+          TARGET_OS: ${{ matrix.os }}
+          TARGET_CPU: ${{ matrix.cpu }}
+          EXTRA_ARGS: ${{ matrix.extra }}
+        run: ./scripts/build.sh
 
-      - name: Check build log
-        if: failure()
-        run: |
-          cd skia
-          if (Test-Path build.log) {
-            Get-Content build.log | Select-String "warning|error" -Context 2
-          } else {
-            Write-Host "build.log not found — failure occurred before ninja ran."
-          }
-
-      - name: Upload Windows artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: skia-windows-x64
+          name: skia-${{ matrix.name }}
           path: |
             skia/out/Release/*.a
             skia/out/Release/*.lib
             skia/out/Release/icudtl.dat
-
-  build-windows-arm64:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows_arm64 }}
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Clone Skia
-        run: |
-          git clone -b chrome/m142 --depth 1 https://skia.googlesource.com/skia.git
-
-      - name: Sync dependencies
-        run: |
-          cd skia
-          python tools/git-sync-deps
-
-      - name: Clean build directory
-        run: |
-          cd skia
-          if (Test-Path out/Release) { Remove-Item -r -fo out/Release }
-
-      - name: Generate build configuration
-        run: |
-          cd skia
-          New-Item -ItemType Directory -Path out/Release -Force | Out-Null
-          $args = @"
-          is_debug = false
-          is_official_build = true
-          target_cpu = "arm64"
-          skia_use_system_expat = false
-          skia_use_system_harfbuzz = false
-          skia_use_system_icu = false
-          skia_use_system_libjpeg_turbo = false
-          skia_use_system_libpng = false
-          skia_use_system_libwebp = false
-          skia_use_system_zlib = false
-          skia_use_freetype = true
-          skia_use_system_freetype2 = false
-          skia_enable_fontmgr_custom_directory = true
-          skia_enable_fontmgr_custom_embedded = true
-          skia_enable_fontmgr_custom_empty = true
-          skia_enable_fontmgr_win = false
-          skia_enable_fontmgr_fontconfig = false
-          extra_cflags = ["/MT"]
-          skia_enable_tools = false
-          "@
-          $args | Out-File -Encoding UTF8 out/Release/args.gn -Force
-          .\bin\gn gen out/Release
-
-      - name: List available GN arguments
-        run: |
-          cd skia
-          .\bin\gn args --list out/Release
-
-      - name: Build Skia
-        run: |
-          cd skia
-          ninja -C out/Release 2>&1 | Tee-Object -FilePath build.log
-
-      - name: Check build log
-        if: failure()
-        run: |
-          cd skia
-          if (Test-Path build.log) {
-            Get-Content build.log | Select-String "warning|error" -Context 2
-          } else {
-            Write-Host "build.log not found — failure occurred before ninja ran."
-          }
-
-      - name: Upload Windows ARM64 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: skia-windows-arm64
-          path: |
-            skia/out/Release/*.a
-            skia/out/Release/*.lib
-            skia/out/Release/icudtl.dat
+            skia/out/Release/args.gn
