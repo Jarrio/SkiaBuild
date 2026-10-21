@@ -20,6 +20,8 @@ on:
 
 env:
   SKIA_BRANCH: chrome/m142
+  # Projects link these static libs with their own NDK, which has to be the same version or newer.
+  ANDROID_NDK_VERSION: 28.2.13676358
 
 defaults:
   run:
@@ -70,6 +72,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
 
+      - name: Install the Android NDK
+        if: matrix.os == 'android'
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$ANDROID_NDK_VERSION" > /dev/null
+          echo "ANDROID_NDK_PATH=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> "$GITHUB_ENV"
+
       - name: Build Skia
         env:
           TARGET_OS: ${{ matrix.os }}
@@ -102,15 +110,24 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          TARGETS: ${{ inputs.targets || 'all' }}
         run: |
           tag="${SKIA_BRANCH#chrome/}"
+          notes="Built from skia $SKIA_BRANCH on $(date -u +%F) (run $GITHUB_RUN_ID)"
           cd dist
           for dir in */; do
             name="${dir%/}"
             (cd "$name" && zip -qr "../$name.zip" .)
           done
-          if ! gh release view "$tag" > /dev/null 2>&1; then
-            gh release create "$tag" --title "Skia $SKIA_BRANCH" --notes ""
+          if [ "$TARGETS" = "all" ]; then
+            # A fresh release, so its date, its tag's commit and its assets all match this run.
+            gh release delete "$tag" --cleanup-tag --yes 2> /dev/null || true
+            gh release create "$tag" *.zip --target "$GITHUB_SHA" --title "Skia $SKIA_BRANCH" --notes "$notes"
+          else
+            # Only some targets were built: replace their assets and keep the rest.
+            if ! gh release view "$tag" > /dev/null 2>&1; then
+              gh release create "$tag" --target "$GITHUB_SHA" --title "Skia $SKIA_BRANCH" --notes ""
+            fi
+            gh release upload "$tag" *.zip --clobber
+            gh release edit "$tag" --notes "$notes"
           fi
-          gh release upload "$tag" *.zip --clobber
-          gh release edit "$tag" --notes "Built from skia $SKIA_BRANCH on $(date -u +%F) (run $GITHUB_RUN_ID)"

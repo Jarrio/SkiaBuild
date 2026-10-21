@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds Skia for one target. Runs unchanged on Linux, macOS and Windows (Git Bash).
-# Required env: SKIA_BRANCH, TARGET_OS, TARGET_CPU. Optional: EXTRA_ARGS.
+# Required env: SKIA_BRANCH, TARGET_OS, TARGET_CPU, and ANDROID_NDK_PATH for Android. Optional: EXTRA_ARGS.
 set -euo pipefail
 
 : "${SKIA_BRANCH:?}" "${TARGET_OS:?}" "${TARGET_CPU:?}"
@@ -35,7 +35,7 @@ mkdir -p "$OUT"
   echo "target_os = \"$TARGET_OS\""
   echo "target_cpu = \"$TARGET_CPU\""
   if [ "$TARGET_OS" = "android" ]; then
-    echo "ndk = \"$ANDROID_NDK_LATEST_HOME\""
+    echo "ndk = \"${ANDROID_NDK_PATH:?set by the NDK install step in the workflow}\""
   fi
   echo "$EXTRA_ARGS"
 } > "$OUT/args.gn"
