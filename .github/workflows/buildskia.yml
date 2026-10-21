@@ -12,6 +12,11 @@ on:
         required: false
         default: 'all'
         type: string
+      release:
+        description: 'Publish the builds to the GitHub release for this Skia branch'
+        required: false
+        default: false
+        type: boolean
 
 env:
   SKIA_BRANCH: chrome/m142
@@ -81,3 +86,31 @@ jobs:
             skia/out/Release/*.lib
             skia/out/Release/icudtl.dat
             skia/out/Release/args.gn
+
+  release:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${SKIA_BRANCH#chrome/}"
+          cd dist
+          for dir in */; do
+            name="${dir%/}"
+            (cd "$name" && zip -qr "../$name.zip" .)
+          done
+          if ! gh release view "$tag" > /dev/null 2>&1; then
+            gh release create "$tag" --title "Skia $SKIA_BRANCH" --notes ""
+          fi
+          gh release upload "$tag" *.zip --clobber
+          gh release edit "$tag" --notes "Built from skia $SKIA_BRANCH on $(date -u +%F) (run $GITHUB_RUN_ID)"
