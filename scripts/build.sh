@@ -14,7 +14,18 @@ if [ ! -d skia ]; then
 fi
 cd skia
 
-python tools/git-sync-deps
+# Syncing ~45 repos in parallel sometimes drops a connection; a rerun resumes.
+for attempt in 1 2 3; do
+  if python tools/git-sync-deps; then
+    break
+  fi
+  if [ "$attempt" = 3 ]; then
+    echo "git-sync-deps failed 3 times" >&2
+    exit 1
+  fi
+  echo "=== git-sync-deps failed, retrying ($attempt/3) ==="
+  sleep 10
+done
 python bin/fetch-ninja
 
 mkdir -p "$OUT"
