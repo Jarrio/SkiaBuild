@@ -70,7 +70,7 @@ jobs:
           TARGET_OS: ${{ matrix.os }}
           TARGET_CPU: ${{ matrix.cpu }}
           EXTRA_ARGS: ${{ matrix.extra }}
-        run: ./scripts/build.sh
+        run: bash scripts/build.sh
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
