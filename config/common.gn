@@ -1,0 +1,28 @@
+# Shared GN args for every target.
+# Per-target values (target_os, target_cpu, extra) live in config/targets.json.
+
+is_debug = false
+is_official_build = true
+skia_enable_tools = false
+
+# Bundle every third-party lib so each platform links the same code.
+skia_use_system_expat = false
+skia_use_system_harfbuzz = false
+skia_use_system_icu = false
+skia_use_system_libjpeg_turbo = false
+skia_use_system_libpng = false
+skia_use_system_libwebp = false
+skia_use_system_zlib = false
+skia_use_system_freetype2 = false
+
+# Same font stack everywhere: bundled FreeType + custom font managers.
+skia_use_freetype = true
+skia_use_fontconfig = false
+skia_enable_fontmgr_custom_directory = true
+skia_enable_fontmgr_custom_embedded = true
+skia_enable_fontmgr_custom_empty = true
+skia_enable_fontmgr_win = false
+skia_enable_fontmgr_fontconfig = false
+
+# Only read on iOS; ignored elsewhere.
+ios_min_target = "15.0"

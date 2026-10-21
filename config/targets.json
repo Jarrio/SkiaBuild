@@ -1,0 +1,14 @@
+[
+  { "name": "linux-x64",          "runner": "ubuntu-latest",    "os": "linux",   "cpu": "x64",   "extra": "" },
+  { "name": "linux-arm64",        "runner": "ubuntu-24.04-arm", "os": "linux",   "cpu": "arm64", "extra": "" },
+  { "name": "macos-arm64",        "runner": "macos-latest",     "os": "mac",     "cpu": "arm64", "extra": "" },
+  { "name": "macos-x64",          "runner": "macos-latest",     "os": "mac",     "cpu": "x64",   "extra": "" },
+  { "name": "windows-x64",        "runner": "windows-latest",   "os": "win",     "cpu": "x64",   "extra": "extra_cflags = [\"/MT\"]" },
+  { "name": "windows-arm64",      "runner": "windows-latest",   "os": "win",     "cpu": "arm64", "extra": "extra_cflags = [\"/MT\"]" },
+  { "name": "android-arm64",      "runner": "ubuntu-latest",    "os": "android", "cpu": "arm64", "extra": "" },
+  { "name": "android-arm",        "runner": "ubuntu-latest",    "os": "android", "cpu": "arm",   "extra": "" },
+  { "name": "android-x64",        "runner": "ubuntu-latest",    "os": "android", "cpu": "x64",   "extra": "" },
+  { "name": "ios-arm64",          "runner": "macos-latest",     "os": "ios",     "cpu": "arm64", "extra": "ios_use_simulator = false" },
+  { "name": "ios-simulator-arm64","runner": "macos-latest",     "os": "ios",     "cpu": "arm64", "extra": "ios_use_simulator = true" },
+  { "name": "ios-simulator-x64",  "runner": "macos-latest",     "os": "ios",     "cpu": "x64",   "extra": "ios_use_simulator = true" }
+]
